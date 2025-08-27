@@ -9,9 +9,9 @@ spring:
   # 数据源配置，请修改为你项目的实际配置
   datasource:
     username: "root"
-    password: "root"
+    password: "19930123"
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.56.66:9081/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
+    url: jdbc:mysql://localhost:3306/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
   data:
     mongodb:
       database: easyJmeter
@@ -21,10 +21,11 @@ spring:
       password: mongo2020
       authentication-database: admin
   influx:
-    url: http://192.168.56.66:8086
-    user: root
-    password: root
-    database: easyJmeter
+    url: http://localhost:8086
+#    user: admin
+#    password: Admin@123456
+    token: 78cI854nWvFxIyn2crSaZo0kow3R--4eMW-nYvTC7wNeiq-NrFBdq4WvjBwcNCiN1X__37bnOhEdwRvPfKGhMw==
+    database: mybucket
 
 # 开启权限拦截
 auth:
@@ -49,10 +50,10 @@ logging:
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 minio:
-  endpoint: http://192.168.56.66:9085
-  bucketName: dev
-  accessKey: root
-  secretKey: minio2023
+  endpoint: http://localhost:9000
+  bucketName: easy-jmeter
+  accessKey: admin
+  secretKey: Admin@123456
 
 swagger:
   enable: true
@@ -60,10 +61,10 @@ swagger:
 socket:
   server:
     host: 0.0.0.0
-    port: 9000
+    port: 9002
     enable: true
   client:
-    serverUrl: http://127.0.0.1:9000
+    serverUrl: http://127.0.0.1:9002
     enable: false
 
 cron:
