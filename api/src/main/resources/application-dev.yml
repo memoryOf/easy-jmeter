@@ -11,19 +11,19 @@ spring:
     username: "root"
     password: "19930123"
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
+    url: jdbc:mysql://localhost:3306/easy_jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8&allowPublicKeyRetrieval=true
   data:
     mongodb:
       database: easyJmeter
-      host: 192.168.56.66
-      port: 9090
-      username: root
-      password: mongo2020
+      host: 127.0.0.1
+      port: 27017
+      username: admin
+      password: Admin@123456
       authentication-database: admin
   influx:
     url: http://localhost:8086
-#    user: admin
-#    password: Admin@123456
+    user: admin
+    password: Admin@123456
     token: 78cI854nWvFxIyn2crSaZo0kow3R--4eMW-nYvTC7wNeiq-NrFBdq4WvjBwcNCiN1X__37bnOhEdwRvPfKGhMw==
     database: mybucket
 

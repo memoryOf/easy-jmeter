@@ -1,0 +1,49 @@
+Socket.IO 是一个非常流行的 实时通信库，用于在客户端和服务器之间实现双向、基于事件的通信（常用于聊天、实时通知、协作编辑等）。✅ 正确拼写：Socket.IO（不是 stocketo）
+•官网：https://socket.io
+•基于 WebSocket，但支持降级（兼容老浏览器）
+•支持 Node.js、Python、Java、C++ 等多种后端
+•常与 Express、React、Vue 配合使用
+示例代码（Node.js）：// 服务器端
+const io = require('socket.io')(3000);
+
+io.on('connection', (socket) => {
+  console.log('用户连接');
+
+  socket.on('message', (data) => {
+    console.log('收到消息:', data);
+    socket.emit('response', '你好，客户端！');
+  });
+});
+// 客户端
+const socket = io('http://localhost:3000');
+
+socket.on('connect', () => {
+  console.log('连接成功');
+  socket.emit('message', 'Hello Server!');
+});
+
+socket.on('response', (data) => {
+  console.log('服务器回复:', data);
+});
+2. ❌ 是否想说 Kafka、Redis Pub/Sub 或 WebSockets？这些也是常见的实时消息/通信技术，可能与你想要的“stocketo”相关：
+技术    用途
+WebSocket    浏览器与服务器全双工通信
+Socket.IO    基于 WebSocket 的高级封装，支持房间、事件、自动重连
+Kafka    分布式消息队列，用于高吞吐数据流
+Redis Pub/Sub    轻量级发布订阅模式，适合简单实时通知
+3. ❌ 是否是某个小众工具或拼写错误？比如：
+•Storocketo？（无此项目）
+•Socketo？（极少数小众库）
+•Stocket？（也不是标准术语）
+✅ 建议如果你是想了解：🎯 实时通信 / 消息推送 技术，请参考：
+•✅ Socket.IO — 推荐用于 Web 实时应用
+•✅ WebSocket API — 原生浏览器支持
+•✅ MQTT — 适合 IoT 设备通信
+•✅ gRPC — 高性能 RPC，支持流式通信
+🙋‍♂️ 请确认：你是否想了解：
+•[ ] 实时聊天系统？
+•[ ] 服务器推送技术？
+•[ ] WebSocket 通信？
+•[ ] Node.js 网络编程？
+•[ ] 某个具体工具的使用？
+👉 请告诉我你的真实意图或使用场景，我可以为你提供准确的技术方案或学习路径！例如：“我想做一个在线聊天室，该用什么技术？”答案就是：Socket.IO + Node.js + Express ✅
