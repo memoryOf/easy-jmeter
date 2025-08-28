@@ -44,7 +44,7 @@ logging:
     # web信息日志记录
     web: debug
     # SQL日志记录
-    io.github.guojiaxing1995.easyJmeter.mapper: debug
+    com.zhao.easyJmeter.mapper: debug
 
 minio:
   endpoint: http://${MINIO_HOST:minio}:${MINIO_PORT:9000}

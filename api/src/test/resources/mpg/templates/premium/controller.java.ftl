@@ -5,9 +5,9 @@ import io.github.talelin.autoconfigure.exception.NotFoundException;
 <#if package.Controller?split(".")?last == "cms">
 import io.github.talelin.core.annotation.LoginRequired;
 </#if>
-import mybatis.common.io.github.guojiaxing1995.easyJmeter.Page;
-import util.common.io.github.guojiaxing1995.easyJmeter.PageUtil;
-import query.dto.io.github.guojiaxing1995.easyJmeter.BasePageDTO;
+import mybatis.common.com.zhao.easyJmeter.Page;
+import util.common.com.zhao.easyJmeter.PageUtil;
+import query.dto.com.zhao.easyJmeter.BasePageDTO;
 import ${package.Service}.${table.serviceName};
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import ${package.Entity}.${entity};
-import vo.io.github.guojiaxing1995.easyJmeter.CreatedVO;
-import vo.io.github.guojiaxing1995.easyJmeter.DeletedVO;
-import vo.io.github.guojiaxing1995.easyJmeter.PageResponseVO;
-import vo.io.github.guojiaxing1995.easyJmeter.UpdatedVO;
+import vo.com.zhao.easyJmeter.CreatedVO;
+import vo.com.zhao.easyJmeter.DeletedVO;
+import vo.com.zhao.easyJmeter.PageResponseVO;
+import vo.com.zhao.easyJmeter.UpdatedVO;
 
 import javax.validation.constraints.Positive;
 

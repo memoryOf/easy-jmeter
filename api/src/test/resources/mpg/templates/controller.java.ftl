@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import ${package.Entity}.${entity};
-import vo.io.github.guojiaxing1995.easyJmeter.CreatedVO;
-import vo.io.github.guojiaxing1995.easyJmeter.DeletedVO;
-import vo.io.github.guojiaxing1995.easyJmeter.PageResponseVO;
-import vo.io.github.guojiaxing1995.easyJmeter.UpdatedVO;
+import vo.com.zhao.easyJmeter.CreatedVO;
+import vo.com.zhao.easyJmeter.DeletedVO;
+import vo.com.zhao.easyJmeter.PageResponseVO;
+import vo.com.zhao.easyJmeter.UpdatedVO;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Max;

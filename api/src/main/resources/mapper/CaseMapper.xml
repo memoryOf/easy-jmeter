@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="io.github.guojiaxing1995.easyJmeter.mapper.CaseMapper">
+<mapper namespace="com.zhao.easyJmeter.mapper.CaseMapper">
 
-    <resultMap id="BaseResultMap" type="io.github.guojiaxing1995.easyJmeter.model.CaseDO">
+    <resultMap id="BaseResultMap" type="com.zhao.easyJmeter.model.CaseDO">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="name" jdbcType="VARCHAR" property="name"/>
         <result column="creator" jdbcType="INTEGER" property="creator"/>
@@ -17,7 +17,7 @@
         <result column="delete_time" jdbcType="TIMESTAMP" property="deleteTime"/>
     </resultMap>
 
-    <resultMap id="SearchResultMap" type="io.github.guojiaxing1995.easyJmeter.vo.CaseInfoVO">
+    <resultMap id="SearchResultMap" type="com.zhao.easyJmeter.vo.CaseInfoVO">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="name" jdbcType="VARCHAR" property="name"/>
         <result column="status" property="status" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>

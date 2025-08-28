@@ -143,10 +143,10 @@
         <layout>
             <pattern>%d %p %c{1.}: %m%n</pattern>
         </layout>
-        <filter class="io.github.guojiaxing1995.easyJmeter.module.log.JmeterLogFilter"/>
+        <filter class="com.zhao.easyJmeter.module.log.JmeterLogFilter"/>
     </appender>
     
-    <logger name="io.github.guojiaxing1995.easyJmeter.module.log.MDCAccessServletFilter" level="INFO" additivity="false">
+    <logger name="com.zhao.easyJmeter.module.log.MDCAccessServletFilter" level="INFO" additivity="false">
         <appender-ref ref="FILE_ACCESS"/>
     </logger>
     

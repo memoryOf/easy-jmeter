@@ -8,10 +8,10 @@ server:
 spring:
   # 数据源配置，请修改为你项目的实际配置
   datasource:
-    username: "root"
-    password: "root"
+    username: "zhao"
+    password: "19930123"
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://10.10.77.87:9081/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
+    url: jdbc:mysql://192.168.142.132:3306/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
   data:
     mongodb:
       database: easyJmeter
@@ -46,13 +46,13 @@ logging:
     # web信息日志记录
     web: debug
     # SQL日志记录
-    io.github.guojiaxing1995.easyJmeter.mapper: debug
+    com.zhao.easyJmeter.mapper: debug
 
 minio:
-  endpoint: http://10.10.77.87:9085
-  bucketName: dev
-  accessKey: root
-  secretKey: minio2023
+  endpoint: http://192.168.142.132:9085
+  bucketName: easy-jmeter
+  accessKey: admin
+  secretKey: admin@123456
 
 swagger:
   enable: true

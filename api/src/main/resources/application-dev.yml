@@ -46,7 +46,7 @@ logging:
     # web信息日志记录
     web: debug
     # SQL日志记录
-    io.github.guojiaxing1995.easyJmeter.mapper: debug
+    com.zhao.easyJmeter.mapper: debug
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 minio:

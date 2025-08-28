@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="io.github.guojiaxing1995.easyJmeter.mapper.TaskMapper">
-    <resultMap id="SearchResultMap" type="io.github.guojiaxing1995.easyJmeter.vo.HistoryTaskVO">
+<mapper namespace="com.zhao.easyJmeter.mapper.TaskMapper">
+    <resultMap id="SearchResultMap" type="com.zhao.easyJmeter.vo.HistoryTaskVO">
         <result column="id" jdbcType="INTEGER" property="id"/>
         <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
         <result column="case_id" jdbcType="INTEGER" property="caseId"/>
@@ -48,7 +48,7 @@
         </if>
     </select>
 
-    <select id="selectByIdIncludeDelete" resultType="io.github.guojiaxing1995.easyJmeter.model.TaskDO">
+    <select id="selectByIdIncludeDelete" resultType="com.zhao.easyJmeter.model.TaskDO">
         select *
         from task t
         where t.id = #{id}
