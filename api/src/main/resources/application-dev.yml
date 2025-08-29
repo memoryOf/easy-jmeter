@@ -11,17 +11,20 @@ spring:
     username: "root"
     password: "19930123"
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/easy_jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+#    url: jdbc:mysql://localhost:3306/easy_jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.110.142:3306/easy_jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8&allowPublicKeyRetrieval=true
   data:
     mongodb:
       database: easyJmeter
-      host: 127.0.0.1
+#      host: 127.0.0.1
+      host: 192.168.110.142
       port: 27017
       username: admin
       password: Admin@123456
       authentication-database: admin
   influx:
-    url: http://localhost:8086
+#    url: http://localhost:8086
+    url: http://192.168.110.142:8086
     user: admin
     password: Admin@123456
     token: 78cI854nWvFxIyn2crSaZo0kow3R--4eMW-nYvTC7wNeiq-NrFBdq4WvjBwcNCiN1X__37bnOhEdwRvPfKGhMw==
@@ -50,7 +53,8 @@ logging:
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 minio:
-  endpoint: http://localhost:9000
+#  endpoint: http://localhost:9000
+  endpoint: http://192.168.110.142:9000
   bucketName: easy-jmeter
   accessKey: admin
   secretKey: Admin@123456
@@ -64,7 +68,7 @@ socket:
     port: 9002
     enable: false
   client:
-    serverUrl: http://127.0.0.1:8002
+    serverUrl: http://127.0.0.1:9002
     enable: true
 
 cron:
