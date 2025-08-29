@@ -90,7 +90,8 @@ public class JmeterExternal {
 
     public void version() {
         Path jmeterPath = Paths.get(this.path, "/bin/jmeter");
-        ProcessBuilder processBuilder = new ProcessBuilder( jmeterPath.toString(), "--version");
+        System.out.println("jmeter path: " + jmeterPath);
+        ProcessBuilder processBuilder = new ProcessBuilder(jmeterPath.toString(), "--version");
         processBuilder.environment().putAll(System.getenv());
         StringBuilder outputString = new StringBuilder();
         Process process = null;
@@ -123,31 +124,29 @@ public class JmeterExternal {
     }
 
     public void ipAddress() {
-        try{
+        try {
             Enumeration<NetworkInterface> allNetInterfaces = NetworkInterface.getNetworkInterfaces();
             InetAddress addr = null;
-            while (allNetInterfaces.hasMoreElements())
-            {
+            while (allNetInterfaces.hasMoreElements()) {
                 NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
                 //System.out.println(netInterface.getName());
                 Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
-                while (addresses.hasMoreElements())
-                {
+                while (addresses.hasMoreElements()) {
                     InetAddress ipTmp = (InetAddress) addresses.nextElement();
-                    if(ipTmp != null && ipTmp instanceof Inet4Address
+                    if (ipTmp != null && ipTmp instanceof Inet4Address
                             && ipTmp.isSiteLocalAddress()
                             && !ipTmp.isLoopbackAddress()
-                            && ipTmp.getHostAddress().indexOf(":")==-1){
+                            && ipTmp.getHostAddress().indexOf(":") == -1) {
                         addr = ipTmp;
                     }
                 }
             }
-            if(addr != null) {
+            if (addr != null) {
                 this.address = addr.getHostAddress();
             } else {
                 log.error("获取本机ip异常");
             }
-        }catch(SocketException e){
+        } catch (SocketException e) {
             log.error("获取本机ip异常", e);
         }
     }
@@ -201,21 +200,21 @@ public class JmeterExternal {
     public void initServerJmeterUtils(TaskDO taskDO) {
         JMeterUtils.setJMeterHome(this.path);
         JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
-        if (taskDO!=null){
+        if (taskDO != null) {
             Integer granularity = taskDO.getGranularity();
             if (granularity == 0) {
                 Integer duration = taskDO.getDuration();
-                if (duration/60 <= 15) {
+                if (duration / 60 <= 15) {
                     granularity = 3;
-                } else if (duration/60 > 15 && duration/60 <= 30) {
+                } else if (duration / 60 > 15 && duration / 60 <= 30) {
                     granularity = 6;
-                } else if (duration/60 > 30 && duration/60 <= 60) {
+                } else if (duration / 60 > 30 && duration / 60 <= 60) {
                     granularity = 10;
                 } else {
                     granularity = 30;
                 }
             }
-            JMeterUtils.setProperty("jmeter.reportgenerator.overall_granularity", String.valueOf(granularity*1000));
+            JMeterUtils.setProperty("jmeter.reportgenerator.overall_granularity", String.valueOf(granularity * 1000));
         }
         JMeterUtils.setProperty("jmeter.save.saveservice.output_format", "xml");
         JMeterUtils.setProperty("jmeter.save.saveservice.response_data", "true");
@@ -259,7 +258,7 @@ public class JmeterExternal {
             SearchByClass<ThreadGroup> threadGroupSearch = new SearchByClass<>(org.apache.jmeter.threads.ThreadGroup.class);
             testPlanTree.traverse(threadGroupSearch);
             for (ThreadGroup threadGroup : threadGroupSearch.getSearchResults()) {
-                threadGroup.setNumThreads(taskDO.getNumThreads()/taskDO.getMachineNum());
+                threadGroup.setNumThreads(taskDO.getNumThreads() / taskDO.getMachineNum());
                 threadGroup.setDuration(taskDO.getDuration());
                 threadGroup.setScheduler(true);
                 threadGroup.setRampUp(taskDO.getRampTime());
@@ -267,14 +266,14 @@ public class JmeterExternal {
             }
 
             // 添加常数吞吐量定时器
-            int qpsLimit = taskDO.getQpsLimit() ==0 ?  999999999 : Math.round((float) taskDO.getQpsLimit() /taskDO.getMachineNum());
+            int qpsLimit = taskDO.getQpsLimit() == 0 ? 999999999 : Math.round((float) taskDO.getQpsLimit() / taskDO.getMachineNum());
             ConstantThroughputTimer constantThroughputTimer = new ConstantThroughputTimer();
             constantThroughputTimer.setName("Constant Throughput Timer");
             constantThroughputTimer.setEnabled(true);
             constantThroughputTimer.setCalcMode(1);
             constantThroughputTimer.setProperty(new StringProperty(TestElement.GUI_CLASS, "TestBeanGUI"));
             constantThroughputTimer.setProperty(new StringProperty(TestElement.TEST_CLASS, "ConstantThroughputTimer"));
-            String throughput = "${__jexl3(${__P(throughput, "+ qpsLimit +")}*60,)}";
+            String throughput = "${__jexl3(${__P(throughput, " + qpsLimit + ")}*60,)}";
             constantThroughputTimer.setProperty("throughput", throughput);
 
             testPlanTree.add(testPlanTree.getArray()[0], constantThroughputTimer);
@@ -290,7 +289,7 @@ public class JmeterExternal {
                 arguments.setProperty(new StringProperty(TestElement.NAME, "arguments"));
                 arguments.setEnabled(true);
                 arguments.addArgument("influxdbMetricsSender", "org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender", "=");
-                arguments.addArgument("influxdbUrl", url+"/write?db="+database, "=");
+                arguments.addArgument("influxdbUrl", url + "/write?db=" + database, "=");
                 arguments.addArgument("application", taskId, "=");
                 arguments.addArgument("measurement", "jmeter", "=");
                 arguments.addArgument("summaryOnly", "false", "=");
@@ -310,7 +309,7 @@ public class JmeterExternal {
                 testPlanTree.add(testPlanTree.getArray()[0], backendListener);
             }
 
-            try (FileOutputStream outputStream = new FileOutputStream(new File(this.path + "/tmp/" +taskDO.getTaskId() +".jmx"))) {
+            try (FileOutputStream outputStream = new FileOutputStream(new File(this.path + "/tmp/" + taskDO.getTaskId() + ".jmx"))) {
                 SaveService.saveTree(testPlanTree, outputStream);
             }
         }
@@ -325,7 +324,7 @@ public class JmeterExternal {
         String jtlPath = Paths.get(dir, "debug.jtl").toString();
         // 下载jmx文件
         String jmxStr = caseDO.getJmx();
-        List<JFileDO> jmxFileDOList= Arrays.stream(jmxStr.isEmpty() ? new String[]{} : jmxStr.split(","))
+        List<JFileDO> jmxFileDOList = Arrays.stream(jmxStr.isEmpty() ? new String[]{} : jmxStr.split(","))
                 .map(Integer::parseInt).map(jFileService::searchById).collect(Collectors.toList());
         if (jmxFileDOList.isEmpty()) {
             throw new ParameterException();
@@ -334,17 +333,17 @@ public class JmeterExternal {
         }
         // jar文件下载
         String jarStr = caseDO.getJar();
-        List<JFileDO> jarFileDOList= Arrays.stream(jarStr.isEmpty() ? new String[]{} : jarStr.split(","))
+        List<JFileDO> jarFileDOList = Arrays.stream(jarStr.isEmpty() ? new String[]{} : jarStr.split(","))
                 .map(Integer::parseInt).map(jFileService::searchById).collect(Collectors.toList());
-        for (JFileDO jFileDO: jarFileDOList) {
+        for (JFileDO jFileDO : jarFileDOList) {
             jFileService.downloadFile(jFileDO.getId(), dir);
         }
         // csv 文件下载
         String csvStr = caseDO.getCsv();
-        List<JFileDO> csvFileDOList= Arrays.stream(csvStr.isEmpty() ? new String[]{} : csvStr.split(","))
+        List<JFileDO> csvFileDOList = Arrays.stream(csvStr.isEmpty() ? new String[]{} : csvStr.split(","))
                 .map(Integer::parseInt).map(jFileService::searchById).collect(Collectors.toList());
         List<File> csvFiles = new ArrayList<>();
-        for (JFileDO jFileDO: csvFileDOList) {
+        for (JFileDO jFileDO : csvFileDOList) {
             File csvFile = new File(jFileService.downloadFile(jFileDO.getId(), dir));
             csvFiles.add(csvFile);
         }
@@ -382,7 +381,7 @@ public class JmeterExternal {
         try (FileOutputStream outputStream = new FileOutputStream(new File(jmxPath))) {
             SaveService.saveTree(testPlanTree, outputStream);
         }
-        
+
         Map<String, String> map = new HashMap<>();
         map.put("jmxPath", jmxPath);
         map.put("jtlPath", jtlPath);
@@ -397,12 +396,12 @@ public class JmeterExternal {
         String jtlPath = Paths.get(this.path, "/tmp/result.jtl").toString();
         String reportPath = Paths.get(this.path, "/tmp/report").toString();
         ProcessBuilder processBuilder =
-                new ProcessBuilder( jmeterPath,"-n","-t",jmxPath,"-j",logPath,"-L","all="+taskDO.getLogLevel().getDesc(),"-l",jtlPath,"-e","-o",reportPath);
+                new ProcessBuilder(jmeterPath, "-n", "-t", jmxPath, "-j", logPath, "-L", "all=" + taskDO.getLogLevel().getDesc(), "-l", jtlPath, "-e", "-o", reportPath);
         processBuilder.environment().putAll(System.getenv());
         StringBuilder outputString = new StringBuilder();
         try {
             Process process = processBuilder.start();
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     outputString.append(line).append("\n");
@@ -412,12 +411,12 @@ public class JmeterExternal {
                     }
                     // 判断是否已经结束但由于开放了beanshell端口导致服务没有停止
                     File report = new File(reportPath);
-                    if (report.exists() && ThreadUtil.isProcessContainingName(taskDO.getTaskId()+".jmx")) {
-                        ThreadUtil.killProcessContainingName(taskDO.getTaskId()+".jmx");
+                    if (report.exists() && ThreadUtil.isProcessContainingName(taskDO.getTaskId() + ".jmx")) {
+                        ThreadUtil.killProcessContainingName(taskDO.getTaskId() + ".jmx");
                     }
                     // 向主节点发送进度
                     Integer machineProcess = this.getMachineProcess(line, taskDO);
-                    if (machineProcess !=0 && !Thread.currentThread().isInterrupted()) {
+                    if (machineProcess != 0 && !Thread.currentThread().isInterrupted()) {
                         TaskProgressMachineDTO taskProgressMachineDTO = new TaskProgressMachineDTO(taskDO.getTaskId(), this.getAddress(), machineProcess);
                         String taskProgressMachine = new ObjectMapper().writeValueAsString(taskProgressMachineDTO);
                         socket.emit("machineTaskProgress", taskProgressMachine);
@@ -448,7 +447,7 @@ public class JmeterExternal {
             int second = Integer.parseInt(parts[2]); // 秒
 
             int totalSeconds = hour * 3600 + minute * 60 + second; // 转换为总秒数
-            return Math.round(((float) totalSeconds /taskDO.getDuration())*100);
+            return Math.round(((float) totalSeconds / taskDO.getDuration()) * 100);
 
         } else {
             return 0;
@@ -477,7 +476,7 @@ public class JmeterExternal {
         if (taskDO.getQpsLimit() == 0) {
             qpsLimit = 999999999;
         } else {
-            qpsLimit = Math.round((float) taskDO.getQpsLimit() /taskDO.getMachineNum());
+            qpsLimit = Math.round((float) taskDO.getQpsLimit() / taskDO.getMachineNum());
         }
         String bshPath = this.createBshFile();
         ProcessBuilder processBuilder =
@@ -485,7 +484,7 @@ public class JmeterExternal {
         processBuilder.environment().putAll(System.getenv());
         try {
             Process process = processBuilder.start();
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     log.info(line);
@@ -499,8 +498,8 @@ public class JmeterExternal {
 
     public void clean(TaskDO taskDO) throws IOException {
         // 如果测试进程仍然存在，则杀掉进程
-        if (ThreadUtil.isProcessContainingName(taskDO.getTaskId()+".jmx")) {
-            ThreadUtil.killProcessContainingName(taskDO.getTaskId()+".jmx");
+        if (ThreadUtil.isProcessContainingName(taskDO.getTaskId() + ".jmx")) {
+            ThreadUtil.killProcessContainingName(taskDO.getTaskId() + ".jmx");
         }
         // 将tmp目录重命名为任务目录
         Path tmpPath = Paths.get(this.path, "tmp");
@@ -511,7 +510,7 @@ public class JmeterExternal {
     public void collect(TaskDO taskDO, JFileService jFileService) {
         // 上传jmeter日志
         File jmeterLogPath = new File(Paths.get(this.path, "tmp", "jmeter.log").toString());
-        File newLogPath = new File(Paths.get(this.path, "tmp", this.address+"_jmeter.log").toString());
+        File newLogPath = new File(Paths.get(this.path, "tmp", this.address + "_jmeter.log").toString());
         boolean LogRename = jmeterLogPath.renameTo(newLogPath);
         if (LogRename) {
             JFileDO file = jFileService.createFile(newLogPath.getAbsolutePath());
@@ -520,7 +519,7 @@ public class JmeterExternal {
         }
         // 上传jtl文件
         File jtlPath = new File(Paths.get(this.path, "tmp", "result.jtl").toString());
-        File newJtlPath = new File(Paths.get(this.path, "tmp", this.address + taskDO.getTaskId() +"_result.jtl").toString());
+        File newJtlPath = new File(Paths.get(this.path, "tmp", this.address + taskDO.getTaskId() + "_result.jtl").toString());
         boolean jtlRename = jtlPath.renameTo(newJtlPath);
         if (jtlRename) {
             JFileDO file = jFileService.createFile(newJtlPath.getAbsolutePath());
@@ -531,7 +530,7 @@ public class JmeterExternal {
 
     public void downloadConfigFile(TaskDO taskDO, JFileService jFileService, MachineCutFileVO machineCutFileVO) {
         String tmpDir = Paths.get(this.path, "tmp").toString();
-        String dependencyDir = Paths.get(this.path,"tmp", "dependencies").toString();
+        String dependencyDir = Paths.get(this.path, "tmp", "dependencies").toString();
         // 下载分配给本机的切分文件
         if (machineCutFileVO.getMachineDOCutFileVOListMap() != null) {
             Map<String, List<CutFileVO>> map = machineCutFileVO.getMachineDOCutFileVOListMap();
@@ -543,18 +542,18 @@ public class JmeterExternal {
         }
         // 下载无需切分的文件
         String[] csvFileIds = (taskDO.getCsv() != null && !taskDO.getCsv().isEmpty()) ? taskDO.getCsv().split(",") : new String[]{};
-        for (String csvFileId : csvFileIds){
+        for (String csvFileId : csvFileIds) {
             JFileDO jFileCsvDO = jFileService.searchById(Integer.valueOf(csvFileId));
-            if (!jFileCsvDO.getCut()){
+            if (!jFileCsvDO.getCut()) {
                 jFileService.downloadFile(Integer.valueOf(csvFileId), tmpDir);
             }
         }
         String[] jmxFileIds = (taskDO.getJmx() != null && !taskDO.getJmx().isEmpty()) ? taskDO.getJmx().split(",") : new String[]{};
-        for (String jmxFileId : jmxFileIds){
+        for (String jmxFileId : jmxFileIds) {
             jFileService.downloadFile(Integer.valueOf(jmxFileId), tmpDir);
         }
-        String[] jarFileIds = (taskDO.getJar()!= null &&!taskDO.getJar().isEmpty())? taskDO.getJar().split(",") : new String[]{};
-        for (String jarFileId : jarFileIds){
+        String[] jarFileIds = (taskDO.getJar() != null && !taskDO.getJar().isEmpty()) ? taskDO.getJar().split(",") : new String[]{};
+        for (String jarFileId : jarFileIds) {
             jFileService.downloadFile(Integer.valueOf(jarFileId), dependencyDir);
         }
     }
@@ -573,7 +572,7 @@ public class JmeterExternal {
             processBuilder.environment().putAll(System.getenv());
             try {
                 Process process = processBuilder.start();
-                try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                     firstLine = reader.readLine();
                 }
                 int exitCode = process.waitFor();
@@ -610,7 +609,7 @@ public class JmeterExternal {
         filePaths.add(">>");
         filePaths.add(newJtlPath);
         String commandString = String.join(" ", filePaths);
-        ProcessBuilder processBuilder = new ProcessBuilder("sh","-c",commandString);
+        ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", commandString);
         processBuilder.environment().putAll(System.getenv());
         try {
             Process process = processBuilder.start();
