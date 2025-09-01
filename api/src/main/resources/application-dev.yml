@@ -64,12 +64,12 @@ swagger:
 
 socket:
   server:
-    host: localhost
+    host: 192.168.110.142
     port: 9002
-    enable: false
-  client:
-    serverUrl: http://127.0.0.1:9002
     enable: true
+  client:
+    serverUrl: http://192.168.110.142:9002
+    enable: false
 
 cron:
   heartBeat: "0 0/1 * * * ?"
