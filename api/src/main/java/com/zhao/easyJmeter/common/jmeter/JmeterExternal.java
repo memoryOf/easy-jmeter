@@ -280,16 +280,22 @@ public class JmeterExternal {
 
             //添加influxdb后置监听器
             if (taskDO.getRealtime()) {
-                String database = influxDBProperties.getDatabase();
                 String url = influxDBProperties.getUrl();
+                String org = influxDBProperties.getOrg();
+                String bucket = influxDBProperties.getBucket();
+                String token = influxDBProperties.getToken();
                 String taskId = taskDO.getTaskId();
+
                 Arguments arguments = new Arguments();
                 arguments.setProperty(new StringProperty(TestElement.GUI_CLASS, "ArgumentsPanel"));
                 arguments.setProperty(new StringProperty(TestElement.TEST_CLASS, "Arguments"));
                 arguments.setProperty(new StringProperty(TestElement.NAME, "arguments"));
                 arguments.setEnabled(true);
+
                 arguments.addArgument("influxdbMetricsSender", "org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender", "=");
-                arguments.addArgument("influxdbUrl", url + "/write?db=" + database, "=");
+                String influxUrl = String.format("%s/api/v2/write?org=%s&bucket=%s", url, org, bucket);
+                arguments.addArgument("influxdbUrl", influxUrl, "=");
+                arguments.addArgument("influxdbToken", token, "=");
                 arguments.addArgument("application", taskId, "=");
                 arguments.addArgument("measurement", "jmeter", "=");
                 arguments.addArgument("summaryOnly", "false", "=");
