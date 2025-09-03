@@ -1,59 +1,60 @@
 package com.zhao.easyJmeter.common.configuration;
 
-import okhttp3.OkHttpClient;
-import org.influxdb.InfluxDB;
-import org.influxdb.InfluxDBFactory;
-import org.influxdb.dto.Query;
+import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.InfluxDBClientFactory;
+import com.influxdb.client.domain.Bucket;
+import com.influxdb.client.domain.Organization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.concurrent.TimeUnit;
-
 @Configuration
 public class InfluxDBConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(InfluxDBConfiguration.class);
 
     @Autowired
     private InfluxDBProperties influxDBProperties;
 
-//    @Bean
-//    public InfluxDB influxDB() {
-//        InfluxDB influxDB = InfluxDBFactory.connect(influxDBProperties.getUrl(), influxDBProperties.getUser(), influxDBProperties.getPassword());
-//        influxDB.query(new Query("CREATE DATABASE " + influxDBProperties.getDatabase()));
-//        influxDB.setDatabase(influxDBProperties.getDatabase());
-//        return influxDB;
-//    }
-
     @Bean
-    public InfluxDB influxDB() {
-        InfluxDB influxDB;
+    public InfluxDBClient influxDBClient() {
+        // 使用新的工厂方法创建客户端
+        InfluxDBClient influxDBClient = InfluxDBClientFactory.create(
+                influxDBProperties.getUrl(),
+                influxDBProperties.getToken().toCharArray(),
+                influxDBProperties.getOrg() // 2.x 需要 Organization
+        );
 
-        // 如果配置了token，则使用token方式连接（适用于InfluxDB 2.x）
-        if (influxDBProperties.getToken() != null && !influxDBProperties.getToken().isEmpty()) {
-            OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-                    .connectTimeout(60, TimeUnit.SECONDS)
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .writeTimeout(60, TimeUnit.SECONDS);
+        // 在 2.x 中，我们不叫 "database"，而是 "bucket"
+        String bucketName = influxDBProperties.getBucket();
+        String orgName = influxDBProperties.getOrg();
 
-            influxDB = InfluxDBFactory.connect(
-                    influxDBProperties.getUrl(),
-                    okHttpClientBuilder);
-        } else {
-            // 否则使用用户名/密码方式连接（适用于InfluxDB 1.x）
-            influxDB = InfluxDBFactory.connect(
-                    influxDBProperties.getUrl(),
-                    influxDBProperties.getUser(),
-                    influxDBProperties.getPassword());
-        }
-
+        // 最佳实践：检查 Bucket 是否存在，而不是每次都尝试创建
+        // 这需要您的 Token 拥有 'read:orgs' 和 'read:buckets' 权限
         try {
-            influxDB.query(new Query("CREATE DATABASE " + influxDBProperties.getDatabase()));
-            influxDB.setDatabase(influxDBProperties.getDatabase());
+            Organization org = influxDBClient.getOrganizationsApi().findOrganizations().stream()
+                    .filter(o -> o.getName().equals(orgName))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("InfluxDB aOrganization '" + orgName + "' not found."));
+
+            Bucket bucket = influxDBClient.getBucketsApi().findBucketByName(bucketName);
+            if (bucket == null) {
+                log.warn("Bucket '{}' not found. Attempting to create it.", bucketName);
+                // 尝试创建 Bucket，这需要您的 Token 拥有 'write:buckets' 权限
+                influxDBClient.getBucketsApi().createBucket(bucketName, org);
+                log.info("Successfully created bucket '{}'.", bucketName);
+            } else {
+                log.info("Bucket '{}' already exists.", bucketName);
+            }
         } catch (Exception e) {
-            System.out.println("Warning: Could not create database: " + e.getMessage());
+            // 如果权限不足或发生其他错误，这里会捕获到
+            log.error("Error during InfluxDB bucket setup: {}. Please check token permissions and configuration.", e.getMessage());
+            // 抛出异常让应用启动失败，这比静默失败更好
+            throw new RuntimeException("Failed to configure InfluxDB bucket", e);
         }
 
-        return influxDB;
+        return influxDBClient;
     }
-
 }

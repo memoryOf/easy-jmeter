@@ -12,7 +12,8 @@ public class InfluxDBProperties {
     private String url;
     private String user;
     private String password;
-    private String database;
+    private String bucket;
     private String token;
+    private String org;
 
 }
