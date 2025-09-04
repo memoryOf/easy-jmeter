@@ -564,67 +564,128 @@ public class JmeterExternal {
         }
     }
 
+//    public String mergeJtlFile(TaskDO taskDO, JFileService jFileService) {
+//        List<JFileDO> jFileDOS = jFileService.searchJtlByTaskId(taskDO.getTaskId());
+//        List<String> filePaths = new ArrayList<>();
+//        for (JFileDO file : jFileDOS) {
+//            String filePath = jFileService.downloadFile(file.getId(), null);
+//            filePaths.add(filePath);
+//        }
+//        // 获取文件首行
+//        String firstLine = "";
+//        if (!filePaths.isEmpty()) {
+//            ProcessBuilder processBuilder = new ProcessBuilder("head", "-1", filePaths.get(0));
+//            processBuilder.environment().putAll(System.getenv());
+//            try {
+//                Process process = processBuilder.start();
+//                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+//                    firstLine = reader.readLine();
+//                }
+//                int exitCode = process.waitFor();
+//            } catch (IOException | InterruptedException e) {
+//                log.error("获取jtl文件首行失败", e);
+//            }
+//        }
+//        // 所有文件去除首行
+//        for (String filePath : filePaths) {
+//            ProcessBuilder processBuilder = new ProcessBuilder("sed", "-i", "1d", filePath);
+//            processBuilder.environment().putAll(System.getenv());
+//            try {
+//                Process process = processBuilder.start();
+//                int exitCode = process.waitFor();
+//            } catch (IOException | InterruptedException e) {
+//                log.error("删除jtl文件首行失败", e);
+//            }
+//        }
+//        // 加入文件第一行
+//        String newJtlPath = Paths.get(jFileService.getStoreDir(), taskDO.getTaskId() + ".jtl").toString();
+//        File newJtlFile = new File(newJtlPath);
+//        try {
+//            newJtlFile.createNewFile();
+//        } catch (IOException e) {
+//            log.error("创建jtl文件失败");
+//        }
+//        try (PrintWriter writer = new PrintWriter(newJtlFile)) {
+//            writer.println(firstLine);
+//        } catch (IOException e) {
+//            log.error("写入首行失败", e);
+//        }
+//        // 合并所有文件
+//        filePaths.add(0, "cat");
+//        filePaths.add(">>");
+//        filePaths.add(newJtlPath);
+//        String commandString = String.join(" ", filePaths);
+//        ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", commandString);
+//        processBuilder.environment().putAll(System.getenv());
+//        try {
+//            Process process = processBuilder.start();
+//            List<String> command = processBuilder.command();
+//            int exitCode = process.waitFor();
+//        } catch (IOException | InterruptedException e) {
+//            log.error("jtl文件聚合失败", e);
+//        }
+//        log.info("合并jtl成功");
+//        return newJtlPath;
+//    }
+
     public String mergeJtlFile(TaskDO taskDO, JFileService jFileService) {
         List<JFileDO> jFileDOS = jFileService.searchJtlByTaskId(taskDO.getTaskId());
-        List<String> filePaths = new ArrayList<>();
-        for (JFileDO file : jFileDOS) {
-            String filePath = jFileService.downloadFile(file.getId(), null);
-            filePaths.add(filePath);
+        if (jFileDOS.isEmpty()) {
+            log.warn("没有找到需要合并的JTL文件，任务ID: {}", taskDO.getTaskId());
+            return null;
         }
-        // 获取文件首行
-        String firstLine = "";
-        if (!filePaths.isEmpty()) {
-            ProcessBuilder processBuilder = new ProcessBuilder("head", "-1", filePaths.get(0));
-            processBuilder.environment().putAll(System.getenv());
-            try {
-                Process process = processBuilder.start();
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                    firstLine = reader.readLine();
-                }
-                int exitCode = process.waitFor();
-            } catch (IOException | InterruptedException e) {
-                log.error("获取jtl文件首行失败", e);
-            }
+
+        // 首先下载所有需要的文件
+        List<String> filePaths = jFileDOS.stream()
+                .map(file -> jFileService.downloadFile(file.getId(), null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (filePaths.isEmpty()) {
+            log.error("下载JTL文件失败，无法进行合并。");
+            return null;
         }
-        // 所有文件去除首行
-        for (String filePath : filePaths) {
-            ProcessBuilder processBuilder = new ProcessBuilder("sed", "-i", "1d", filePath);
-            processBuilder.environment().putAll(System.getenv());
-            try {
-                Process process = processBuilder.start();
-                int exitCode = process.waitFor();
-            } catch (IOException | InterruptedException e) {
-                log.error("删除jtl文件首行失败", e);
-            }
-        }
-        // 加入文件第一行
+
         String newJtlPath = Paths.get(jFileService.getStoreDir(), taskDO.getTaskId() + ".jtl").toString();
-        File newJtlFile = new File(newJtlPath);
-        try {
-            newJtlFile.createNewFile();
+        log.info("开始合并JTL文件到: {}", newJtlPath);
+
+        // 使用 try-with-resources 确保流被自动且安全地关闭
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(newJtlPath))) {
+            boolean headerWritten = false; // 标记表头是否已写入
+
+            for (String filePath : filePaths) {
+                File file = new File(filePath);
+                if (!file.exists() || file.length() == 0) {
+                    log.warn("跳过空的或不存在的JTL文件: {}", filePath);
+                    continue;
+                }
+
+                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                    String header = reader.readLine(); // 读取第一行（可能是表头）
+
+                    // 如果这是第一个有效文件，并且它有表头，则写入它。
+                    if (!headerWritten && header != null) {
+                        writer.write(header);
+                        writer.newLine();
+                        headerWritten = true;
+                        log.debug("已从文件写入表头: {}", filePath);
+                    }
+
+                    // 写入当前文件剩余的数据行
+                    String dataLine;
+                    while ((dataLine = reader.readLine()) != null) {
+                        writer.write(dataLine);
+                        writer.newLine();
+                    }
+                }
+            }
         } catch (IOException e) {
-            log.error("创建jtl文件失败");
+            log.error("JTL文件聚合期间发生严重错误，任务ID: {}", taskDO.getTaskId(), e);
+            // 抛出运行时异常以中止进程，因为报告已无法生成。
+            throw new RuntimeException("JTL文件聚合失败", e);
         }
-        try (PrintWriter writer = new PrintWriter(newJtlFile)) {
-            writer.println(firstLine);
-        } catch (IOException e) {
-            log.error("写入首行失败", e);
-        }
-        // 合并所有文件
-        filePaths.add(0, "cat");
-        filePaths.add(">>");
-        filePaths.add(newJtlPath);
-        String commandString = String.join(" ", filePaths);
-        ProcessBuilder processBuilder = new ProcessBuilder("sh", "-c", commandString);
-        processBuilder.environment().putAll(System.getenv());
-        try {
-            Process process = processBuilder.start();
-            List<String> command = processBuilder.command();
-            int exitCode = process.waitFor();
-        } catch (IOException | InterruptedException e) {
-            log.error("jtl文件聚合失败", e);
-        }
-        log.info("合并jtl成功");
+
+        log.info("成功合并JTL文件。");
         return newJtlPath;
     }
 
@@ -634,7 +695,9 @@ public class JmeterExternal {
         JMeterUtils.setProperty(JMETER_REPORT_OUTPUT_DIR_PROPERTY, outputReportPath);
 
         try {
+            JMeterUtils.setProperty("jmeter.reportgenerator.ignore_csv_headers", "true");
             JMeterUtils.setProperty("jmeter.save.saveservice.output_format", "csv");
+            JMeterUtils.setProperty("jmeter.save.saveservice.timestamp_format", "ms");
             ReportGenerator generator = new ReportGenerator(jtlPath, null);
             generator.generate();
         } catch (ConfigurationException | GenerationException e) {
