@@ -56,133 +56,144 @@
           </div>
         </div>
         
-        <!-- 组件属性 -->
-        <div class="property-section" v-if="componentProperties.length > 0">
+        <!-- 组件属性（HTTP请求采用JMeter风格Tab） -->
+        <div class="property-section" v-if="selectedComponent && selectedComponent.componentType === 'HTTPSamplerProxy'">
+          <div class="section-header">
+            <span class="section-title">HTTP Request</span>
+          </div>
+          <div class="section-content">
+            <el-tabs v-model="httpActiveTab" type="border-card">
+              <el-tab-pane label="Basic" name="basic">
+                <div class="property-group">
+                  <div class="form-row">
+                    <label class="form-label">协议</label>
+                    <el-select v-model="propertyValues['HTTPSampler.protocol']" size="small" @change="updateProperty('HTTPSampler.protocol', propertyValues['HTTPSampler.protocol'])">
+                      <el-option label="HTTP" value="http" />
+                      <el-option label="HTTPS" value="https" />
+                    </el-select>
+                  </div>
+                  <div class="form-row">
+                    <label class="form-label">服务器名称或IP</label>
+                    <el-input v-model="propertyValues['HTTPSampler.domain']" size="small" placeholder="example.com" @blur="updateProperty('HTTPSampler.domain', propertyValues['HTTPSampler.domain'])" />
+                  </div>
+                  <div class="form-row two-cols">
+                    <div>
+                      <label class="form-label">端口号</label>
+                      <el-input-number v-model="propertyValues['HTTPSampler.port']" :min="1" :max="65535" size="small" @change="updateProperty('HTTPSampler.port', propertyValues['HTTPSampler.port'])" />
+                    </div>
+                    <div>
+                      <label class="form-label">内容编码</label>
+                      <el-select v-model="propertyValues['HTTPSampler.contentEncoding']" size="small" @change="updateProperty('HTTPSampler.contentEncoding', propertyValues['HTTPSampler.contentEncoding'])">
+                        <el-option label="UTF-8" value="UTF-8" />
+                        <el-option label="GBK" value="GBK" />
+                        <el-option label="ISO-8859-1" value="ISO-8859-1" />
+                      </el-select>
+                    </div>
+                  </div>
+                  <div class="form-row two-cols">
+                    <div>
+                      <label class="form-label">HTTP方法</label>
+                      <el-select v-model="propertyValues['HTTPSampler.method']" size="small" @change="updateProperty('HTTPSampler.method', propertyValues['HTTPSampler.method'])">
+                        <el-option label="GET" value="GET" />
+                        <el-option label="POST" value="POST" />
+                        <el-option label="PUT" value="PUT" />
+                        <el-option label="DELETE" value="DELETE" />
+                        <el-option label="PATCH" value="PATCH" />
+                        <el-option label="HEAD" value="HEAD" />
+                        <el-option label="OPTIONS" value="OPTIONS" />
+                      </el-select>
+                    </div>
+                    <div>
+                      <label class="form-label">路径</label>
+                      <el-input v-model="propertyValues['HTTPSampler.path']" size="small" placeholder="/api/users" @blur="updateProperty('HTTPSampler.path', propertyValues['HTTPSampler.path'])" />
+                    </div>
+                  </div>
+                </div>
+              </el-tab-pane>
+              <el-tab-pane label="Parameters" name="params">
+                <div class="request-table">
+                  <div class="table-toolbar">
+                    <el-button size="small" @click="addParamRow" type="primary">Add</el-button>
+                    <el-button size="small" @click="removeSelectedParams">Delete</el-button>
+                  </div>
+                  <el-table :data="httpParams" @selection-change="sel=>paramSelection=sel" size="small" border>
+                    <el-table-column type="selection" width="48" />
+                    <el-table-column label="Name" width="220">
+                      <template #default="{row}">
+                        <el-input v-model="row.name" size="small" />
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="Value">
+                      <template #default="{row}">
+                        <el-input v-model="row.value" size="small" />
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="URL Encode?" width="110">
+                      <template #default="{row}">
+                        <el-checkbox v-model="row.encode" />
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </div>
+              </el-tab-pane>
+              <el-tab-pane label="Body Data" name="body">
+                <el-input type="textarea" :rows="8" v-model="propertyValues['HTTPSampler.postBodyRaw']" placeholder="请求体内容" @blur="updateProperty('HTTPSampler.postBodyRaw', propertyValues['HTTPSampler.postBodyRaw'])" />
+              </el-tab-pane>
+              <el-tab-pane label="Files Upload" name="files">
+                <div class="request-table">
+                  <div class="table-toolbar">
+                    <el-button size="small" @click="addFileRow" type="primary">Add</el-button>
+                    <el-button size="small" @click="removeSelectedFiles">Delete</el-button>
+                  </div>
+                  <el-table :data="httpFiles" @selection-change="sel=>fileSelection=sel" size="small" border>
+                    <el-table-column type="selection" width="48" />
+                    <el-table-column label="Param Name" width="160">
+                      <template #default="{row}"><el-input v-model="row.param" size="small" /></template>
+                    </el-table-column>
+                    <el-table-column label="File Path">
+                      <template #default="{row}"><el-input v-model="row.path" size="small" /></template>
+                    </el-table-column>
+                    <el-table-column label="MIME Type" width="160">
+                      <template #default="{row}"><el-input v-model="row.mime" size="small" /></template>
+                    </el-table-column>
+                  </el-table>
+                </div>
+              </el-tab-pane>
+              <el-tab-pane label="Advanced" name="advanced">
+                <div class="property-group">
+                  <div class="form-row two-cols">
+                    <div>
+                      <label class="form-label">连接超时(ms)</label>
+                      <el-input-number v-model="propertyValues['HTTPSampler.connect_timeout']" :min="0" size="small" @change="updateProperty('HTTPSampler.connect_timeout', propertyValues['HTTPSampler.connect_timeout'])" />
+                    </div>
+                    <div>
+                      <label class="form-label">响应超时(ms)</label>
+                      <el-input-number v-model="propertyValues['HTTPSampler.response_timeout']" :min="0" size="small" @change="updateProperty('HTTPSampler.response_timeout', propertyValues['HTTPSampler.response_timeout'])" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <el-checkbox v-model="propertyValues['HTTPSampler.follow_redirects']" @change="updateProperty('HTTPSampler.follow_redirects', propertyValues['HTTPSampler.follow_redirects'])">跟随重定向</el-checkbox>
+                  </div>
+                </div>
+              </el-tab-pane>
+            </el-tabs>
+          </div>
+        </div>
+        
+        <!-- 其他组件复用原折叠式表单 -->
+        <div class="property-section" v-else-if="componentProperties.length > 0">
           <div class="section-header">
             <span class="section-title">组件属性</span>
-            <el-button size="small" type="text" @click="expandAll">
-              {{ allExpanded ? '收起全部' : '展开全部' }}
-            </el-button>
+            <el-button size="small" type="text" @click="expandAll">{{ allExpanded ? '收起全部' : '展开全部' }}</el-button>
           </div>
           <div class="section-content">
             <el-collapse v-model="activeProperties" accordion>
-              <el-collapse-item
-                v-for="group in componentProperties"
-                :key="group.name"
-                :title="group.title"
-                :name="group.name"
-              >
+              <el-collapse-item v-for="group in componentProperties" :key="group.name" :title="group.title" :name="group.name">
                 <div class="property-group">
-                  <div
-                    v-for="property in group.properties"
-                    :key="property.key"
-                    class="form-row"
-                  >
-                    <label class="form-label" :title="property.description">
-                      {{ property.name }}
-                      <span class="required" v-if="property.required">*</span>
-                    </label>
-                    
-                    <!-- 字符串输入 -->
-                    <el-input
-                      v-if="property.type === 'string'"
-                      v-model="propertyValues[property.key]"
-                      :placeholder="property.placeholder || '输入' + property.name"
-                      size="small"
-                      @blur="updateProperty(property.key, propertyValues[property.key])"
-                      :disabled="property.readonly"
-                    />
-                    
-                    <!-- 多行文本 -->
-                    <el-input
-                      v-else-if="property.type === 'textarea'"
-                      v-model="propertyValues[property.key]"
-                      type="textarea"
-                      :rows="3"
-                      :placeholder="property.placeholder || '输入' + property.name"
-                      size="small"
-                      @blur="updateProperty(property.key, propertyValues[property.key])"
-                      :disabled="property.readonly"
-                    />
-                    
-                    <!-- 数字输入 -->
-                    <el-input-number
-                      v-else-if="property.type === 'number'"
-                      v-model="propertyValues[property.key]"
-                      size="small"
-                      :min="property.min"
-                      :max="property.max"
-                      :step="property.step || 1"
-                      @blur="updateProperty(property.key, propertyValues[property.key])"
-                      :disabled="property.readonly"
-                    />
-                    
-                    <!-- 布尔选择 -->
-                    <el-switch
-                      v-else-if="property.type === 'boolean'"
-                      v-model="propertyValues[property.key]"
-                      @change="updateProperty(property.key, propertyValues[property.key])"
-                      :disabled="property.readonly"
-                    />
-                    
-                    <!-- 下拉选择 -->
-                    <el-select
-                      v-else-if="property.type === 'select'"
-                      v-model="propertyValues[property.key]"
-                      :placeholder="'选择' + property.name"
-                      size="small"
-                      @change="updateProperty(property.key, propertyValues[property.key])"
-                      :disabled="property.readonly"
-                    >
-                      <el-option
-                        v-for="option in property.options"
-                        :key="option.value"
-                        :label="option.label"
-                        :value="option.value"
-                      />
-                    </el-select>
-                    
-                    <!-- 文件选择 -->
-                    <div v-else-if="property.type === 'file'" class="file-input">
-                      <el-input
-                        v-model="propertyValues[property.key]"
-                        :placeholder="property.placeholder || '选择文件'"
-                        size="small"
-                        readonly
-                        @blur="updateProperty(property.key, propertyValues[property.key])"
-                      >
-                        <template #append>
-                          <el-button @click="selectFile(property.key)" size="small">
-                            <el-icon><Folder /></el-icon>
-                          </el-button>
-                        </template>
-                      </el-input>
-                    </div>
-                    
-                    <!-- 表格编辑器 -->
-                    <div v-else-if="property.type === 'table'" class="table-editor">
-                      <el-button size="small" @click="editTable(property.key)" type="primary">
-                        编辑表格
-                      </el-button>
-                      <span class="table-info">
-                        {{ getTableInfo(property.key) }}
-                      </span>
-                    </div>
-                    
-                    <!-- 默认文本输入 -->
-                    <el-input
-                      v-else
-                      v-model="propertyValues[property.key]"
-                      :placeholder="property.placeholder || '输入' + property.name"
-                      size="small"
-                      @blur="updateProperty(property.key, propertyValues[property.key])"
-                      :disabled="property.readonly"
-                    />
-                    
-                    <!-- 属性说明 -->
-                    <div v-if="property.description" class="property-desc">
-                      {{ property.description }}
-                    </div>
+                  <div v-for="property in group.properties" :key="property.key" class="form-row">
+                    <label class="form-label" :title="property.description">{{ property.name }}<span class="required" v-if="property.required">*</span></label>
+                    <component :is="getEditorType(property)" v-model="propertyValues[property.key]" :property="property" @blur.native="updateProperty(property.key, propertyValues[property.key])" @change="updateProperty(property.key, propertyValues[property.key])" />
+                    <div v-if="property.description" class="property-desc">{{ property.description }}</div>
                   </div>
                 </div>
               </el-collapse-item>
@@ -290,6 +301,11 @@ export default {
   emits: ['update-property'],
   setup(props, { emit }) {
     const activeProperties = ref([])
+    const httpActiveTab = ref('basic')
+    const httpParams = ref([])
+    const paramSelection = ref([])
+    const httpFiles = ref([])
+    const fileSelection = ref([])
     const showAdvanced = ref(false)
     const allExpanded = ref(false)
     const propertyValues = ref({})
@@ -611,6 +627,12 @@ export default {
           }
         })
       })
+
+      // 初始化HTTP表格数据
+      if (props.selectedComponent.componentType === 'HTTPSamplerProxy') {
+        httpParams.value = Array.isArray(propertyValues.value['HTTPSampler.arguments']) ? [...propertyValues.value['HTTPSampler.arguments']] : []
+        httpFiles.value = Array.isArray(propertyValues.value['HTTPSampler.files']) ? [...propertyValues.value['HTTPSampler.files']] : []
+      }
     }
     
     // 更新属性
@@ -742,6 +764,25 @@ export default {
       tableDialog.visible = false
       ElMessage.success('表格更新成功')
     }
+
+    // HTTP 参数表
+    const addParamRow = () => {
+      httpParams.value.push({ name: '', value: '', encode: true })
+      updateProperty('HTTPSampler.arguments', [...httpParams.value])
+    }
+    const removeSelectedParams = () => {
+      httpParams.value = httpParams.value.filter(r => !paramSelection.value.includes(r))
+      updateProperty('HTTPSampler.arguments', [...httpParams.value])
+    }
+    // 文件表
+    const addFileRow = () => {
+      httpFiles.value.push({ param: '', path: '', mime: '' })
+      updateProperty('HTTPSampler.files', [...httpFiles.value])
+    }
+    const removeSelectedFiles = () => {
+      httpFiles.value = httpFiles.value.filter(r => !fileSelection.value.includes(r))
+      updateProperty('HTTPSampler.files', [...httpFiles.value])
+    }
     
     // 显示帮助
     const showHelp = () => {
@@ -862,6 +903,20 @@ export default {
 
 .property-form {
   padding: 0;
+}
+
+.two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.request-table {
+  .table-toolbar {
+    margin-bottom: 8px;
+    display: flex;
+    gap: 8px;
+  }
 }
 
 .property-section {
@@ -988,7 +1043,7 @@ export default {
   }
 }
 
-::v-deep .el-collapse {
+:deep(.el-collapse) {
   border: none;
   
   .el-collapse-item {
@@ -1014,7 +1069,7 @@ export default {
   }
 }
 
-::v-deep .el-input--small {
+:deep(.el-input--small) {
   .el-input__inner {
     height: 28px;
     line-height: 28px;
@@ -1022,7 +1077,7 @@ export default {
   }
 }
 
-::v-deep .el-input-number--small {
+:deep(.el-input-number--small) {
   .el-input__inner {
     height: 28px;
     line-height: 28px;
@@ -1030,7 +1085,7 @@ export default {
   }
 }
 
-::v-deep .el-select--small {
+:deep(.el-select--small) {
   .el-input__inner {
     height: 28px;
     line-height: 28px;
@@ -1038,7 +1093,7 @@ export default {
   }
 }
 
-::v-deep .el-textarea--small {
+:deep(.el-textarea--small) {
   .el-textarea__inner {
     font-size: 12px;
   }

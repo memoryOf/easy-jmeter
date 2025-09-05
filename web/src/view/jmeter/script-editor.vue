@@ -23,6 +23,18 @@
           <el-icon><Files /></el-icon>
           模板
         </el-button>
+        <el-button type="primary" @click="validateScript" :disabled="!rootComponent || running">
+          <el-icon><CircleCheck /></el-icon>
+          验证脚本
+        </el-button>
+        <el-button type="success" @click="runScript" :loading="running" :disabled="!rootComponent">
+          <el-icon><Play /></el-icon>
+          运行
+        </el-button>
+        <el-button type="danger" @click="stopScript" :disabled="!running">
+          <el-icon><Close /></el-icon>
+          停止
+        </el-button>
       </div>
       <div class="toolbar-right">
         <el-dropdown @command="exportScript">
@@ -38,10 +50,6 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        <el-button type="danger" @click="validateScript" :disabled="!rootComponent">
-          <el-icon><CircleCheck /></el-icon>
-          验证脚本
-        </el-button>
       </div>
     </div>
 
@@ -102,6 +110,20 @@
       </div>
     </div>
 
+    <!-- 执行结果面板 -->
+    <div class="exec-panel" v-show="execPanel.visible">
+      <div class="exec-header">
+        <div class="exec-title">{{ running ? '正在运行...' : '执行结果' }}</div>
+        <div class="exec-actions">
+          <el-button size="small" @click="clearExecLog">清空</el-button>
+          <el-button size="small" type="text" @click="execPanel.visible=false">收起</el-button>
+        </div>
+      </div>
+      <div class="exec-content">
+        <pre class="exec-log">{{ execLog }}</pre>
+      </div>
+    </div>
+
     <!-- 预览对话框 -->
     <preview-dialog 
       v-model:visible="previewVisible"
@@ -142,7 +164,7 @@ import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Plus, DocumentChecked, FolderOpened, View, Files, 
-  Download, ArrowDown, CircleCheck 
+  Download, ArrowDown, CircleCheck, Play, Close 
 } from '@element-plus/icons-vue'
 import { get, post } from '@/lin/plugin/axios'
 import ComponentLibrary from './components/component-library.vue'
@@ -160,7 +182,7 @@ export default {
     PreviewDialog,
     TemplateManager,
     Plus, DocumentChecked, FolderOpened, View, Files, 
-    Download, ArrowDown, CircleCheck
+    Download, ArrowDown, CircleCheck, Play, Close
   },
   setup() {
     // 响应式数据
@@ -170,6 +192,9 @@ export default {
     const selectedComponent = ref(null)
     const hasChanges = ref(false)
     const lastSaved = ref('')
+    const running = ref(false)
+    const execLog = ref('')
+    const execPanel = reactive({ visible: false })
     
     // 对话框状态
     const previewVisible = ref(false)
@@ -261,6 +286,42 @@ export default {
       } finally {
         saving.value = false
       }
+    }
+
+    // 运行脚本（占位：调用后端运行接口并流式追加日志）
+    const runScript = async () => {
+      if (!rootComponent.value) return
+      running.value = true
+      execPanel.visible = true
+      execLog.value += `[${new Date().toLocaleTimeString()}] Start run...\n`
+      try {
+        // 示例：调用后端验证并运行
+        await post('/v1/jmeter/script-editor/validate-tree', rootComponent.value)
+        execLog.value += 'Validate OK\n'
+        // TODO 调用运行接口，建议采用 websocket/sse 获取实时日志
+        const res = await post('/v1/jmeter/script-editor/run', { rootComponent: rootComponent.value })
+        execLog.value += (res?.message || 'Run finished') + '\n'
+      } catch (e) {
+        execLog.value += 'Error: ' + (e.message || e) + '\n'
+      } finally {
+        running.value = false
+        execLog.value += `[${new Date().toLocaleTimeString()}] Done.\n`
+      }
+    }
+
+    const stopScript = async () => {
+      try {
+        await post('/v1/jmeter/script-editor/stop', {})
+        execLog.value += `[${new Date().toLocaleTimeString()}] Stop requested.\n`
+      } catch (e) {
+        execLog.value += 'Stop error: ' + (e.message || e) + '\n'
+      } finally {
+        running.value = false
+      }
+    }
+
+    const clearExecLog = () => {
+      execLog.value = ''
     }
     
     const loadScript = async () => {
@@ -571,7 +632,14 @@ export default {
       exportScript,
       validateScript,
       showTemplateManager,
-      applyTemplate
+      applyTemplate,
+      // run panel
+      running,
+      runScript,
+      stopScript,
+      execPanel,
+      execLog,
+      clearExecLog
     }
   }
 }
@@ -680,7 +748,36 @@ export default {
   }
 }
 
-:deep(.el-button-group) {
+.exec-panel {
+  height: 200px;
+  background: #111;
+  color: #e6e6e6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  border-top: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  
+  .exec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: #1a1a1a;
+    border-bottom: 1px solid #333;
+    
+    .exec-title { font-size: 12px; }
+    .exec-actions { display: flex; gap: 8px; }
+  }
+  .exec-content {
+    flex: 1;
+    overflow: auto;
+    padding: 8px 10px;
+    
+    .exec-log { white-space: pre-wrap; margin: 0; font-size: 12px; }
+  }
+}
+
+::v-deep .el-button-group {
   .el-button {
     padding: 5px 10px;
   }
