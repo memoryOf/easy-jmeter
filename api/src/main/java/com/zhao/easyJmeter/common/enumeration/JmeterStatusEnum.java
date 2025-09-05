@@ -42,6 +42,10 @@ public enum JmeterStatusEnum implements IEnum<Integer> {
         return this.value;
     }
 
+    public String getDesc() {
+        return this.desc;
+    }
+
     public static JmeterStatusEnum getEnumByCode(Integer code){
         Optional<JmeterStatusEnum> optional = EnumUtil.getEnumObject(JmeterStatusEnum.class, e -> e.getValue().equals(code));
         return optional.isPresent() ? optional.get() : null;
