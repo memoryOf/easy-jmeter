@@ -16,6 +16,11 @@ spring:
       # 关闭默认静态资源的映射规则
       add-mappings: false
 
+mybatis:
+  mapper-locations: classpath*:mapping/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
 mybatis-plus:
   configuration:
     # 开启下划线转驼峰
